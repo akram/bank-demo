@@ -1,0 +1,36 @@
+id: bank-services
+display_name: Bank Services (descoped)
+description: Bank API access with CEO identity delegation and scope descoping via Keycloak token exchange
+category: other
+
+credentials:
+  - name: user_identity_token
+    description: User OIDC token obtained via delegated identity and Keycloak token exchange
+    required: false
+    auth_style: bearer
+    header_name: Authorization
+    token_grant:
+      grant_type: token_exchange
+      token_endpoint: https://keycloak-keycloak.apps.rosa.akram-dev.b5xj.p3.openshiftapps.com/realms/bank-demo/protocol/openid-connect/token
+      audience: agent-sandbox
+      client_assertion_type: urn:ietf:params:oauth:client-assertion-type:jwt-spiffe
+      scopes: [accounts.read, transfers.read]
+      cache_ttl_seconds: 60
+      requested_token_type: urn:ietf:params:oauth:token-type:access_token
+      subject_token:
+        source: sandbox_delegated_identity
+        credential: ""
+
+endpoints:
+  - host: bank-api.default.svc.cluster.local
+    port: 80
+    protocol: rest
+    tls: none
+    access: read-write
+    enforcement: enforce
+
+binaries:
+  - /usr/bin/curl
+  - /usr/local/bin/curl
+  - /usr/local/bin/claude
+  - /usr/bin/node

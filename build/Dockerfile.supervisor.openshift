@@ -1,0 +1,20 @@
+# Multi-stage build: compile supervisor binary on Linux, then copy to runtime image
+FROM registry.access.redhat.com/ubi9/ubi:latest AS builder
+
+RUN dnf install -y gcc gcc-c++ make openssl-devel pkg-config cmake && dnf clean all
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+WORKDIR /build
+COPY . .
+
+RUN cargo build --release -p openshell-sandbox --bin openshell-sandbox 2>&1 | tail -5
+
+# Runtime - needs to be minimal but with basic tools for sandbox supervisor
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+
+COPY --from=builder /build/target/release/openshell-sandbox /openshell-sandbox
+
+ENTRYPOINT ["/openshell-sandbox"]

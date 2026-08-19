@@ -1,0 +1,31 @@
+# Multi-stage build: compile gateway binary on Linux, then copy to runtime image
+FROM registry.access.redhat.com/ubi9/ubi:latest AS builder
+
+# Install build deps including Z3 from EPEL
+RUN dnf install -y gcc gcc-c++ make openssl-devel pkg-config cmake clang-devel python3 && \
+    dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    dnf install -y z3-devel && \
+    dnf clean all
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+WORKDIR /build
+COPY . .
+
+RUN cargo build --release -p openshell-server --bin openshell-gateway
+
+# Runtime
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+
+# Copy Z3 shared lib from builder
+COPY --from=builder /usr/lib64/libz3.so* /usr/lib64/
+
+COPY --from=builder /build/target/release/openshell-gateway /usr/local/bin/openshell-gateway
+
+USER 1000:1000
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/openshell-gateway"]
+CMD ["--bind-address", "0.0.0.0", "--port", "8080"]
