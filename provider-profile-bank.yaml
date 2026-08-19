@@ -1,18 +1,19 @@
 id: bank-services
-display_name: Bank Services (descoped)
-description: Bank API access with CEO identity delegation and scope descoping via Keycloak token exchange
+display_name: Bank Services (descoped via token exchange)
+description: Bank API with SPIFFE token exchange and CEO identity delegation
 category: other
 
 credentials:
   - name: user_identity_token
-    description: User OIDC token obtained via delegated identity and Keycloak token exchange
+    description: User token obtained via SPIFFE token exchange
     required: false
     auth_style: bearer
     header_name: Authorization
     token_grant:
       grant_type: token_exchange
-      token_endpoint: https://keycloak-keycloak.apps.rosa.akram-dev.b5xj.p3.openshiftapps.com/realms/bank-demo/protocol/openid-connect/token
-      audience: agent-sandbox
+      token_endpoint: http://token-exchange-issuer.bank-demo.svc.cluster.local/token
+      audience: bank-api
+      jwt_svid_audience: http://token-exchange-issuer.bank-demo.svc.cluster.local
       client_assertion_type: urn:ietf:params:oauth:client-assertion-type:jwt-spiffe
       scopes: [accounts.read, transfers.read]
       cache_ttl_seconds: 60
@@ -22,7 +23,7 @@ credentials:
         credential: ""
 
 endpoints:
-  - host: bank-api.default.svc.cluster.local
+  - host: bank-api.bank-demo.svc.cluster.local
     port: 80
     protocol: rest
     tls: none

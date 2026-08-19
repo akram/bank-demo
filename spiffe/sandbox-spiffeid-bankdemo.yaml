@@ -8,6 +8,7 @@ spec:
     matchLabels:
       kubernetes.io/metadata.name: bank-demo
   podSelector:
-    matchLabels:
-      agents.x-k8s.io/sandbox: ""
+    matchExpressions:
+    - key: agents.x-k8s.io/sandbox-name-hash
+      operator: Exists
   spiffeIDTemplate: "spiffe://openshell.local/openshell/sandbox/{{ index .PodMeta.Annotations \"openshell.io/sandbox-id\" }}"
