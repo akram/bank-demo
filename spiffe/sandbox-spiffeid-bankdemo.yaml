@@ -1,0 +1,13 @@
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: openshell-sandboxes-bankdemo
+spec:
+  className: zero-trust-workload-identity-manager-spire
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: bank-demo
+  podSelector:
+    matchLabels:
+      agents.x-k8s.io/sandbox: ""
+  spiffeIDTemplate: "spiffe://openshell.local/openshell/sandbox/{{ index .PodMeta.Annotations \"openshell.io/sandbox-id\" }}"
