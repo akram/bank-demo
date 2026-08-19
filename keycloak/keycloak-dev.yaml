@@ -1,0 +1,71 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  instances: 1
+  db:
+    vendor: postgres
+    usernameSecret:
+      name: keycloak-db-secret
+      key: username
+    passwordSecret:
+      name: keycloak-db-secret
+      key: password
+    host: keycloak-db
+    database: keycloak
+  hostname:
+    hostname: keycloak-keycloak.apps.rosa.akram-dev.b5xj.p3.openshiftapps.com
+  http:
+    httpEnabled: true
+  proxy:
+    headers: xforwarded
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-db
+  namespace: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak-db
+  template:
+    metadata:
+      labels:
+        app: keycloak-db
+    spec:
+      containers:
+      - name: postgres
+        image: registry.redhat.io/rhel9/postgresql-16:latest
+        env:
+        - name: POSTGRESQL_USER
+          value: keycloak
+        - name: POSTGRESQL_PASSWORD
+          value: keycloak-db-pass-2026
+        - name: POSTGRESQL_DATABASE
+          value: keycloak
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/pgsql/data
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-db
+  namespace: keycloak
+spec:
+  selector:
+    app: keycloak-db
+  ports:
+  - port: 5432
+    targetPort: 5432

@@ -1,0 +1,74 @@
+version: 1
+filesystem_policy:
+  include_workdir: true
+  read_only: [/usr, /lib, /proc, /dev/urandom, /app, /etc, /var/log]
+  read_write: [/sandbox, /tmp, /dev/null]
+landlock:
+  compatibility: best_effort
+network_policies:
+  claude_code:
+    name: claude-code
+    endpoints:
+      - host: inference.local
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: full
+      - host: api.anthropic.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: full
+      - host: statsig.anthropic.com
+        port: 443
+      - host: sentry.io
+        port: 443
+      - host: raw.githubusercontent.com
+        port: 443
+      - host: platform.claude.com
+        port: 443
+      - host: downloads.claude.ai
+        port: 443
+    binaries:
+      - path: /usr/local/bin/claude
+      - path: /usr/bin/node
+  vertex_ai:
+    name: vertex-ai
+    endpoints:
+      - host: oauth2.googleapis.com
+        port: 443
+      - host: us-east5-aiplatform.googleapis.com
+        port: 443
+      - host: aiplatform.googleapis.com
+        port: 443
+    binaries:
+      - path: /usr/local/bin/claude
+      - path: /usr/bin/node
+      - path: /usr/bin/curl
+  github_rest_api:
+    name: github-rest-api
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+    binaries:
+      - path: /usr/local/bin/claude
+      - path: /usr/bin/gh
+  github_ssh_over_https:
+    name: github-ssh-over-https
+    endpoints:
+      - host: github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow:
+              method: GET
+              path: "/**/info/refs*"
+          - allow:
+              method: POST
+              path: "/**/git-upload-pack"
+    binaries:
+      - path: /usr/bin/git

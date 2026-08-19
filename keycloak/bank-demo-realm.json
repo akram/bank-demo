@@ -1,0 +1,115 @@
+{
+  "realm": "bank-demo",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "clientScopes": [
+    {
+      "name": "accounts.read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "accounts.write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "transfers.read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "transfers.write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "openshell-gateway",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "openshell-gateway-secret-2026",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "attributes": {
+        "oidc.token.exchange.enabled": "true"
+      },
+      "defaultClientScopes": ["openid", "profile", "email", "accounts.read", "accounts.write", "transfers.read", "transfers.write"],
+      "redirectUris": ["*"],
+      "webOrigins": ["*"]
+    },
+    {
+      "clientId": "agent-sandbox",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "agent-sandbox-secret-2026",
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "attributes": {
+        "oidc.token.exchange.enabled": "true"
+      },
+      "defaultClientScopes": ["openid", "profile", "email", "accounts.read", "transfers.read"],
+      "optionalClientScopes": []
+    }
+  ],
+  "users": [
+    {
+      "username": "ceo",
+      "email": "ceo@bank.com",
+      "firstName": "Chief",
+      "lastName": "Executive",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ceo-pass-2026",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "analyst",
+      "email": "analyst@bank.com",
+      "firstName": "Jane",
+      "lastName": "Analyst",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "analyst-pass-2026",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Full access (CEO level)"
+      },
+      {
+        "name": "user",
+        "description": "Standard user access"
+      }
+    ]
+  }
+}
