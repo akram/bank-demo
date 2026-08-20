@@ -170,7 +170,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      min-height: 38px;
+      min-height: 52px;
       flex-shrink: 0;
     }
     .chapter-panel-header button {
@@ -219,22 +219,22 @@
       line-height: 1.4;
     }
 
-    /* Toggle button — always visible in top-right of player */
     .chapter-toggle {
       position: absolute;
-      right: 10px;
-      top: 10px;
-      background: rgba(0,0,0,0.5);
-      border: none;
-      color: #ddd;
+      right: 12px;
+      top: 12px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid #ffffff;
+      color: #fff;
       cursor: pointer;
-      font-size: 16px;
-      padding: 5px 9px;
-      border-radius: 4px;
+      font-size: 20px;
+      padding: 6px 10px;
+      border-radius: 6px;
       z-index: 11;
-      transition: opacity 0.2s;
+      line-height: 1;
+      transition: background 0.15s;
     }
-    .chapter-toggle:hover { background: rgba(0,0,0,0.75); }
+    .chapter-toggle:hover { background: rgba(0,0,0,0.8); }
   </style>
 </head>
 <body>
@@ -249,11 +249,10 @@
   <div class="container">
     <div class="player-area">
       <div id="player-container"></div>
-      <button class="chapter-toggle" onclick="toggleChapters()" title="Toggle chapters">&#9776;</button>
+      <button class="chapter-toggle" id="chapter-toggle-btn" onclick="toggleChapters()" title="Chapters">&#171;</button>
       <div class="chapter-panel collapsed" id="chapter-panel">
         <div class="chapter-panel-header">
           <span>Chapters</span>
-          <button onclick="toggleChapters()" title="Close">&times;</button>
         </div>
         <div class="chapter-list" id="chapter-list"></div>
       </div>
@@ -370,7 +369,10 @@
     });
 
     function toggleChapters() {
-      document.getElementById('chapter-panel').classList.toggle('collapsed');
+      const panel = document.getElementById('chapter-panel');
+      const btn = document.getElementById('chapter-toggle-btn');
+      panel.classList.toggle('collapsed');
+      btn.innerHTML = panel.classList.contains('collapsed') ? '&#171;' : '&#187;';
     }
 
     function jumpToChapter(idx) {
