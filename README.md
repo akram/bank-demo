@@ -32,9 +32,9 @@ CEO (Keycloak OIDC login)
 
 ## Demo
 
-**[Interactive demo with AI voice over](https://akram.github.io/bank-demo/demo-player.html)** — asciinema player with synchronized narration (play, pause, seek all work)
+[![Demo with AI voice over](https://asciinema.org/a/kQYuXjvXScHoW4zE.svg)](https://akram.github.io/bank-demo/demo-player.html)
 
-[![asciicast](https://asciinema.org/a/kQYuXjvXScHoW4zE.svg)](https://asciinema.org/a/kQYuXjvXScHoW4zE) *(without voice over)*
+*Click the image above to open the interactive demo with synchronized AI voice over narration (play, pause, seek all work).*
 
 ```bash
 # Play locally
