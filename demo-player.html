@@ -7,66 +7,181 @@
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/asciinema-player@3.9.0/dist/bundle/asciinema-player.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #1a1b26; color: #c0caf5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    h1 { color: #7aa2f7; margin-bottom: 8px; font-size: 1.5em; }
-    .subtitle { color: #565f89; margin-bottom: 20px; font-size: 0.9em; }
-    #player-container { border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
-    .controls { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #24283b; border-radius: 8px; margin-bottom: 16px; }
-    .controls button { background: #7aa2f7; color: #1a1b26; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
-    .controls button:hover { background: #89b4fa; }
-    .controls button.active { background: #f7768e; }
-    .controls button.skip { background: #565f89; padding: 8px 14px; }
-    .controls button.skip:hover { background: #7aa2f7; }
-    .volume-control { display: flex; align-items: center; gap: 6px; }
-    .volume-control input { width: 80px; accent-color: #7aa2f7; }
-    .status { color: #a9b1d6; font-size: 13px; flex: 1; text-align: right; }
-    .segment-indicator { color: #bb9af7; font-weight: 600; }
-    .speaking { color: #9ece6a; }
-    .info { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-    .info-card { background: #24283b; border-radius: 8px; padding: 16px; }
-    .info-card h3 { color: #7aa2f7; margin-bottom: 8px; font-size: 0.9em; }
-    .info-card p, .info-card a { color: #a9b1d6; font-size: 0.85em; line-height: 1.6; }
-    .info-card a { color: #7aa2f7; text-decoration: none; }
-    .info-card a:hover { text-decoration: underline; }
+    body {
+      background: #f5f5f5;
+      color: #333;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+    }
+
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 14px 0;
+    }
+    .header-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header img { height: 22px; }
+    .header .sep { color: #ccc; font-size: 18px; font-weight: 200; }
+    .header .label { color: #666; font-size: 14px; }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    #player-container {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
+    }
+
+    .info-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .info-strip h1 {
+      font-size: 1.25em;
+      font-weight: 600;
+      color: #222;
+      flex: 1;
+    }
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: #666;
+    }
+    .audio-controls input[type=range] {
+      width: 60px;
+      accent-color: #3b82f6;
+    }
+    .segment-indicator { color: #059669; font-weight: 600; }
+    .speaking { color: #059669; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 18px;
+    }
+    .card h3 {
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 0.9em;
+      color: #555;
+      line-height: 1.6;
+    }
+    .card a { color: #3b82f6; text-decoration: none; }
+    .card a:hover { text-decoration: underline; }
+    .card strong { color: #333; }
+
+    .tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #f0f0f0;
+      border-radius: 12px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 16px 0;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .footer a { color: #3b82f6; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>CEO Identity Descoping for AI Agents</h1>
-    <p class="subtitle">OpenShell PR #2772 — SPIFFE Token Exchange + Keycloak RHBK on ROSA HCP</p>
+  <div class="header">
+    <div class="header-inner">
+      <img src="asciinema-logo.svg" alt="asciinema">
+      <span class="sep">/</span>
+      <span class="label">Interactive demo with narration</span>
+    </div>
+  </div>
 
+  <div class="container">
     <div id="player-container"></div>
 
-    <div class="controls">
-      <div class="volume-control">
-        <span>Narration Vol</span>
+    <div class="info-strip">
+      <h1>SPIFFE Token Exchange &mdash; CEO Identity Descoping</h1>
+      <div class="audio-controls">
+        <span>🔊</span>
         <input type="range" id="volume" min="0" max="100" value="80" oninput="setVolume(this.value)">
-      </div>
-      <div class="status">
         <span id="segment-label" class="segment-indicator"></span>
-        <span id="state-label"></span>
+        <span id="state-label" style="color:#999"></span>
       </div>
     </div>
 
-    <div class="info">
-      <div class="info-card">
+    <div class="cards">
+      <div class="card">
         <h3>What this demonstrates</h3>
         <p>
-          A bank CEO delegates their identity to an AI agent running in an OpenShell sandbox.
-          The agent can <strong>read</strong> bank data but <strong>cannot write</strong> —
-          even though the CEO has full permissions. Identity preserved, permissions reduced.
+          A bank CEO delegates their identity to an AI agent in an OpenShell sandbox.
+          The agent can <strong>read</strong> bank data but <strong>cannot write</strong> &mdash;
+          even though the CEO has full permissions.
+          Identity preserved via SPIFFE token exchange, permissions reduced by the provider profile.
         </p>
       </div>
-      <div class="info-card">
-        <h3>Links</h3>
+      <div class="card">
+        <h3>Links &amp; Context</h3>
         <p>
-          <a href="https://redhat.atlassian.net/browse/RHAIRFE-2567">RFE RHAIRFE-2567</a><br>
-          <a href="https://github.com/NVIDIA/OpenShell/pull/2772">OpenShell PR #2772</a> · <a href="https://github.com/NVIDIA/OpenShell/pull/1970">PR #1970</a><br>
-          <a href="https://github.com/akram/bank-demo">Demo repo (GitHub)</a>
+          <a href="https://redhat.atlassian.net/browse/RHAIRFE-2567">RHAIRFE-2567</a> &mdash; RFE<br>
+          <a href="https://github.com/NVIDIA/OpenShell/pull/2772">PR #2772</a> &middot;
+          <a href="https://github.com/NVIDIA/OpenShell/pull/1970">PR #1970</a> &mdash; OpenShell<br>
+          <a href="https://github.com/akram/bank-demo">akram/bank-demo</a> &mdash; Source
         </p>
+        <div class="tags" style="margin-top:10px">
+          <span class="tag">ROSA HCP 4.22</span>
+          <span class="tag">RHBK v26.6</span>
+          <span class="tag">ZTWIM / SPIRE</span>
+          <span class="tag">RFC 8693</span>
+        </div>
       </div>
     </div>
+  </div>
+
+  <div class="footer">
+    Powered by <a href="https://docs.asciinema.org/manual/player/">asciinema-player</a> &middot;
+    Narration powered by <a href="https://voicebox.sh">Voicebox</a>
   </div>
 
   <audio id="voiceover" preload="auto">
@@ -75,27 +190,6 @@
 
   <script src="https://unpkg.com/asciinema-player@3.9.0/dist/bundle/asciinema-player.min.js"></script>
   <script>
-    // voiceover.mp3 plays CONTINUOUSLY from start to finish (never pauses).
-    // The asciinema cast pauses at sync points and WAITS for the audio
-    // segment to finish before resuming.
-    //
-    // Audio segments (cumulative in voiceover.mp3):
-    //   01 architecture:      0.0 -  31.5s
-    //   02 provider profile: 31.5 -  54.9s
-    //   03 ceo identity:     54.9 -  75.1s
-    //   04 token exchange:   75.1 -  99.3s
-    //   05 descoping:        99.3 - 119.6s
-    //   06 audit trail:     119.6 - 137.2s
-    //   07 summary:         137.2 - 154.2s
-    //   08 key difference:  154.2 - 172.3s
-
-    // Each sync point maps a cast region to an audio region.
-    // cast_start..cast_pause_at = the cast section that plays while audio narrates
-    // audio_start..audio_end    = the corresponding audio narration
-    //
-    // When the cast reaches cast_pause_at, it pauses and waits for audio_end.
-    // If the user seeks the cast, we find which segment they landed in and
-    // sync the audio to the matching position.
     const syncPoints = [
       { cast_start:  0.0, cast_pause_at: 12.0,  audio_start:   0.0,   audio_end:  31.52, label: 'Architecture' },
       { cast_start: 12.0, cast_pause_at: 36.0,  audio_start:  31.52,  audio_end:  54.88, label: 'Provider Profile' },
@@ -103,7 +197,6 @@
       { cast_start: 54.0, cast_pause_at: 60.0,  audio_start:  76.72,  audio_end:  99.04, label: 'Token Exchange' },
       { cast_start: 60.0, cast_pause_at: 77.0,  audio_start:  99.04,  audio_end: 119.36, label: 'Descoping Results' },
       { cast_start: 77.0, cast_pause_at: 98.0,  audio_start: 119.36,  audio_end: 136.96, label: 'Audit Trail' },
-      // No pause for Summary — cast finishes naturally while audio plays the last two segments
     ];
 
     const audio = document.getElementById('voiceover');
@@ -113,9 +206,9 @@
     let player;
     let currentSyncIndex = 0;
     let isRunning = false;
-    let checkInterval = null;
     let castPaused = false;
     let lastCastTime = 0;
+    let userPausedAt = 0;
 
     const playerEl = document.getElementById('player-container');
     player = AsciinemaPlayer.create(
@@ -126,63 +219,13 @@
         rows: 50,
         autoPlay: false,
         speed: 1.0,
-        theme: 'dracula',
+        theme: 'asciinema',
         fit: 'width',
         fontSize: 'small',
         terminalLineHeight: 1.2,
       }
     );
 
-    // No custom buttons — everything reacts to asciinema's native play/pause/seek.
-    // We detect state changes by polling getCurrentTime().
-    let userPausedAt = 0;
-
-    setInterval(() => {
-      const castTime = player.getCurrentTime();
-      const castMoving = Math.abs(castTime - lastCastTime) > 0.01;
-
-      // Detect: user pressed PLAY (cast started moving and audio is paused)
-      if (castMoving && audio.paused && !castPaused) {
-        audio.currentTime = castTimeToAudioTime(castTime);
-        audio.play();
-        isRunning = true;
-        userPausedAt = 0;
-        stateLabel.textContent = '';
-      }
-
-      // Prevent cast from ending while audio still plays — pause at exact end
-      if (castTime >= 100.82 && !audio.paused && !audio.ended && !castPaused && isRunning) {
-        player.pause();
-        castPaused = true;
-        segmentLabel.textContent = 'Summary & Conclusion';
-        stateLabel.innerHTML = ' <span class="speaking">narrating...</span>';
-      }
-
-      // Resume cast when audio finishes (if we paused it for the ending)
-      if (castPaused && audio.ended) {
-        castPaused = false;
-        segmentLabel.textContent = '';
-        stateLabel.textContent = ' (finished)';
-        // Don't resume — cast is done
-      }
-
-      // Detect: user pressed PAUSE (cast stopped moving, we didn't pause it)
-      if (!castMoving && !audio.paused && !castPaused && isRunning) {
-        if (userPausedAt === 0) {
-          userPausedAt = Date.now();
-        } else if (Date.now() - userPausedAt > 300) {
-          audio.pause();
-          userPausedAt = 0;
-          stateLabel.textContent = ' (paused)';
-        }
-      } else if (castMoving) {
-        userPausedAt = 0;
-      }
-
-      checkSync();
-    }, 150);
-
-    // Find which segment a cast time falls into
     function findSegmentForCastTime(t) {
       for (let i = syncPoints.length - 1; i >= 0; i--) {
         if (t >= syncPoints[i].cast_start) return i;
@@ -190,7 +233,6 @@
       return 0;
     }
 
-    // Map a cast time to the corresponding audio time within a segment
     function castTimeToAudioTime(castTime) {
       const idx = findSegmentForCastTime(castTime);
       const sync = syncPoints[idx];
@@ -200,58 +242,87 @@
       return sync.audio_start + progress * audioDuration;
     }
 
-    function checkSync() {
+    setInterval(() => {
       const castTime = player.getCurrentTime();
+      const castMoving = Math.abs(castTime - lastCastTime) > 0.01;
 
-      // Detect seek: if cast time jumped more than 1 second from last tick
+      // Detect seek
       const jumped = Math.abs(castTime - lastCastTime) > 1.0 && !castPaused;
-      lastCastTime = castTime;
-
       if (jumped && isRunning) {
-        // User seeked the cast — resync audio
         const newIdx = findSegmentForCastTime(castTime);
         currentSyncIndex = newIdx;
         castPaused = false;
         audio.currentTime = castTimeToAudioTime(castTime);
-        segmentLabel.textContent = syncPoints[newIdx].label;
+        segmentLabel.textContent = syncPoints[newIdx] ? syncPoints[newIdx].label : '';
         stateLabel.textContent = '';
-        // Don't return — fall through to normal sync logic
       }
 
-      if (currentSyncIndex >= syncPoints.length) {
+      // Detect play
+      if (castMoving && audio.paused && !castPaused) {
+        audio.currentTime = castTimeToAudioTime(castTime);
+        audio.play();
+        isRunning = true;
+        userPausedAt = 0;
+        stateLabel.textContent = '';
+      }
+
+      // Prevent cast ending while audio plays
+      if (castTime >= 100.82 && !audio.paused && !audio.ended && !castPaused && isRunning) {
+        player.pause();
+        castPaused = true;
+        segmentLabel.textContent = 'Summary & Conclusion';
+        stateLabel.innerHTML = ' <span class="speaking">narrating...</span>';
+      }
+
+      if (castPaused && audio.ended) {
+        castPaused = false;
         segmentLabel.textContent = '';
         stateLabel.textContent = '';
-        return;
       }
 
-      const sync = syncPoints[currentSyncIndex];
-      const audioTime = audio.currentTime;
+      // Detect user pause
+      if (!castMoving && !audio.paused && !castPaused && isRunning) {
+        if (userPausedAt === 0) {
+          userPausedAt = Date.now();
+        } else if (Date.now() - userPausedAt > 300) {
+          audio.pause();
+          userPausedAt = 0;
+          stateLabel.textContent = '(paused)';
+        }
+      } else if (castMoving) {
+        userPausedAt = 0;
+      }
 
-      if (castPaused) {
-        // Cast is paused — waiting for audio segment to finish
-        if (audioTime >= sync.audio_end) {
-          castPaused = false;
-          currentSyncIndex++;
-          lastCastTime = castTime;
-          stateLabel.textContent = '';
-          if (currentSyncIndex >= syncPoints.length) {
-            segmentLabel.textContent = '';
+      // Sync check
+      if (currentSyncIndex < syncPoints.length) {
+        const sync = syncPoints[currentSyncIndex];
+        const audioTime = audio.currentTime;
+
+        if (castPaused && currentSyncIndex < syncPoints.length) {
+          if (audioTime >= sync.audio_end) {
+            castPaused = false;
+            currentSyncIndex++;
+            lastCastTime = castTime;
+            stateLabel.textContent = '';
+            if (currentSyncIndex >= syncPoints.length) {
+              segmentLabel.textContent = '';
+            }
+            player.play();
           }
-          player.play();
-        }
-      } else {
-        // Cast is playing — check if we hit the pause point
-        if (castTime >= sync.cast_pause_at) {
-          player.pause();
-          castPaused = true;
-          segmentLabel.textContent = sync.label;
-          stateLabel.innerHTML = ' <span class="speaking">narrating...</span>';
-        } else {
-          // Update segment label while playing
-          segmentLabel.textContent = sync.label;
+        } else if (!castPaused) {
+          if (castTime >= sync.cast_pause_at) {
+            player.pause();
+            castPaused = true;
+            segmentLabel.textContent = sync.label;
+            stateLabel.innerHTML = ' <span class="speaking">narrating...</span>';
+          } else {
+            segmentLabel.textContent = sync.label;
+          }
         }
       }
-    }
+
+      lastCastTime = castTime;
+    }, 150);
 
     function setVolume(val) {
       audio.volume = val / 100;
@@ -262,7 +333,7 @@
       isRunning = false;
       castPaused = false;
       segmentLabel.textContent = '';
-      stateLabel.textContent = ' (finished)';
+      stateLabel.textContent = '';
     });
   </script>
 </body>
