@@ -510,19 +510,25 @@
     audio.volume = 0.8;
 
     // Autoplay if ?autoplay is in the URL (from README click)
-    // Browsers block audio autoplay without user interaction,
-    // so we show an overlay that starts everything on first click
+    // Browser autoplay policy: audio needs user gesture OR the page must
+    // have been navigated to (click from another page counts as gesture in
+    // most browsers). We retry until it works.
     if (window.location.search.includes('autoplay')) {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:20;cursor:pointer;border-radius:8px';
-      overlay.innerHTML = '<div style="text-align:center;color:#fff"><div style="font-size:60px;margin-bottom:12px">&#9654;</div><div style="font-size:16px">Click to play with narration</div></div>';
-      overlay.onclick = () => {
-        overlay.remove();
-        player.play();
-        audio.play();
-        isRunning = true;
-      };
-      document.querySelector('.player-area').appendChild(overlay);
+      function tryAutoplay() {
+        audio.play().then(() => {
+          // Audio started — start cast too
+          player.play();
+          isRunning = true;
+        }).catch(() => {
+          // Browser blocked it — retry in 500ms (the user gesture from
+          // clicking the README link may take a moment to propagate)
+          setTimeout(tryAutoplay, 500);
+        });
+      }
+      // Wait for audio to be loadable, then try
+      audio.addEventListener('canplaythrough', () => tryAutoplay(), { once: true });
+      // Fallback: if canplaythrough doesn't fire, try after 1s
+      setTimeout(tryAutoplay, 1000);
     }
 
     audio.addEventListener('ended', () => {
