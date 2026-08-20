@@ -29,13 +29,13 @@ The `source: sandbox_delegated_identity` means the token exchange will use which
 
 ## [0:55 — CEO Identity + Delegation]
 
-The CEO is authenticated via Keycloak. `openshell whoami` shows the subject, the name, and the OIDC provider.
+The CEO is authenticated via Keycloak. `openshell who am I` shows the subject, the name, and the OIDC provider.
 
 The sandbox has a delegated identity — active, with fifty-seven minutes remaining. Inside the sandbox, there are zero credentials. No tokens, no keys, no secrets. The proxy handles everything transparently.
 
 ## [1:10 — Token Exchange in Action]
 
-When the agent calls `bank-api/whoami`, the token exchange happens at the proxy level. The response shows `sub: ceo` — the CEO's identity is preserved. But the scope is `accounts.read transfers.read` only. No write access.
+When the agent calls `bank-api/who am I`, the token exchange happens at the proxy level. The response shows `sub: ceo` — the CEO's identity is preserved. But the scope is `accounts.read transfers.read` only. No write access.
 
 The `azp` field shows the sandbox's SPIFFE identity — that's the cryptographic proof of which sandbox made the request.
 
