@@ -127,6 +127,114 @@
       color: #aaa;
     }
     .footer a { color: #3b82f6; text-decoration: none; }
+
+    /* Player + chapters layout — chapter panel overlays, doesn't shrink player */
+    .player-area {
+      position: relative;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .player-area #player-container {
+      border-radius: 0;
+      box-shadow: none;
+      margin-bottom: 0;
+      width: 100%;
+    }
+
+    /* Chapter panel — overlays on the right side of the player */
+    .chapter-panel {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 250px;
+      background: rgba(20, 20, 20, 0.95);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease;
+      z-index: 10;
+    }
+    .chapter-panel.collapsed {
+      transform: translateX(100%);
+    }
+    .chapter-panel-header {
+      padding: 10px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #888;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 38px;
+      flex-shrink: 0;
+    }
+    .chapter-panel-header button {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 2px 4px;
+      line-height: 1;
+    }
+    .chapter-panel-header button:hover { color: #fff; }
+    .chapter-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #444 transparent;
+    }
+    .chapter-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.1s;
+    }
+    .chapter-item:hover { background: rgba(255,255,255,0.08); }
+    .chapter-item.active {
+      background: rgba(5, 150, 105, 0.15);
+      border-left: 3px solid #059669;
+      padding-left: 11px;
+    }
+    .chapter-item .ch-label {
+      font-size: 13px;
+      color: #ccc;
+      margin-bottom: 2px;
+    }
+    .chapter-item.active .ch-label { color: #fff; font-weight: 600; }
+    .chapter-item .ch-time {
+      font-size: 11px;
+      color: #666;
+    }
+    .chapter-item.active .ch-time { color: #059669; }
+    .chapter-item .ch-desc {
+      font-size: 11px;
+      color: #777;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* Toggle button — always visible in top-right of player */
+    .chapter-toggle {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #ddd;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 5px 9px;
+      border-radius: 4px;
+      z-index: 11;
+      transition: opacity 0.2s;
+    }
+    .chapter-toggle:hover { background: rgba(0,0,0,0.75); }
   </style>
 </head>
 <body>
@@ -139,7 +247,17 @@
   </div>
 
   <div class="container">
-    <div id="player-container"></div>
+    <div class="player-area">
+      <div id="player-container"></div>
+      <button class="chapter-toggle" onclick="toggleChapters()" title="Toggle chapters">&#9776;</button>
+      <div class="chapter-panel collapsed" id="chapter-panel">
+        <div class="chapter-panel-header">
+          <span>Chapters</span>
+          <button onclick="toggleChapters()" title="Close">&times;</button>
+        </div>
+        <div class="chapter-list" id="chapter-list"></div>
+      </div>
+    </div>
 
     <div class="info-strip">
       <h1>SPIFFE Token Exchange &mdash; CEO Identity Descoping</h1>
@@ -226,9 +344,64 @@
       }
     );
 
+    // Chapter panel
+    const chapters = [
+      { label: 'Architecture',     desc: 'SPIFFE token exchange flow diagram', cast: 0.0,  audio: 0.0 },
+      { label: 'Provider Profile',  desc: 'Where descoping is configured',     cast: 12.0, audio: 31.52 },
+      { label: 'CEO Identity',      desc: 'OIDC login + delegated identity',   cast: 36.0, audio: 54.88 },
+      { label: 'Token Exchange',    desc: '/whoami with descoped token',        cast: 54.0, audio: 76.72 },
+      { label: 'Descoping',         desc: 'Read OK, write DENIED',             cast: 60.0, audio: 99.04 },
+      { label: 'Audit Trail',       desc: 'Gateway + issuer + bank-api logs',  cast: 77.0, audio: 119.36 },
+      { label: 'Summary',           desc: 'Key takeaways and conclusion',      cast: 98.0, audio: 136.96 },
+    ];
+
+    const chapterList = document.getElementById('chapter-list');
+    chapters.forEach((ch, i) => {
+      const item = document.createElement('div');
+      item.className = 'chapter-item';
+      const mins = Math.floor(ch.audio / 60);
+      const secs = Math.floor(ch.audio % 60);
+      item.innerHTML =
+        '<div class="ch-label">' + ch.label + '</div>' +
+        '<div class="ch-time">' + mins + ':' + secs.toString().padStart(2,'0') + '</div>' +
+        '<div class="ch-desc">' + ch.desc + '</div>';
+      item.onclick = () => jumpToChapter(i);
+      chapterList.appendChild(item);
+    });
+
+    function toggleChapters() {
+      document.getElementById('chapter-panel').classList.toggle('collapsed');
+    }
+
+    function jumpToChapter(idx) {
+      const ch = chapters[idx];
+      currentSyncIndex = Math.min(idx, syncPoints.length - 1);
+      castPaused = false;
+      player.seek(ch.cast);
+      audio.currentTime = ch.audio;
+      if (audio.paused) {
+        audio.play();
+        player.play();
+        isRunning = true;
+      }
+      stateLabel.textContent = '';
+      updateChapterHighlight(idx);
+      // Scroll active chapter into view
+      const items = chapterList.querySelectorAll('.chapter-item');
+      if (items[idx]) items[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function updateChapterHighlight(activeIdx) {
+      const items = chapterList.querySelectorAll('.chapter-item');
+      items.forEach((item, i) => {
+        item.classList.toggle('active', i === activeIdx);
+      });
+    }
+
     function findSegmentForCastTime(t) {
-      for (let i = syncPoints.length - 1; i >= 0; i--) {
-        if (t >= syncPoints[i].cast_start) return i;
+      // Use chapters array (which includes Summary) not syncPoints
+      for (let i = chapters.length - 1; i >= 0; i--) {
+        if (t >= chapters[i].cast) return i;
       }
       return 0;
     }
@@ -320,6 +493,10 @@
           }
         }
       }
+
+      // Update chapter highlight
+      const activeChapter = findSegmentForCastTime(castTime);
+      updateChapterHighlight(activeChapter);
 
       lastCastTime = castTime;
     }, 150);
