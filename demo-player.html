@@ -508,6 +508,20 @@
     }
 
     audio.volume = 0.8;
+
+    // Autoplay if ?autoplay is in the URL (from README click)
+    if (window.location.search.includes('autoplay')) {
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          player.play();
+          audio.play().catch(() => {
+            // Browser may block autoplay — user will need to click play
+          });
+          isRunning = true;
+        }, 500);
+      });
+    }
+
     audio.addEventListener('ended', () => {
       isRunning = false;
       castPaused = false;
