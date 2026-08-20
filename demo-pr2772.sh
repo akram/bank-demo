@@ -85,6 +85,57 @@ oc exec -n zero-trust-workload-identity-manager spire-server-0 -c spire-server -
 echo ""
 pause 3
 
+# ─── Provider Profile (descoping config) ───
+header "Descoping Configuration — the Provider Profile"
+
+step "The platform admin creates a provider profile that defines which scopes the agent can request"
+echo ""
+echo -e "  ${BOLD}Who does this:${NC} the platform admin (not the CEO, not the agent)"
+echo -e "  ${BOLD}When:${NC} once, when setting up the agent's access to downstream services"
+echo ""
+echo -e "${DIM}\$ cat provider-profile-bank.yaml${NC}"
+echo ""
+echo -e "  ${BOLD}id:${NC} bank-services"
+echo -e "  ${BOLD}credentials:${NC}"
+echo -e "    - name: user_identity_token"
+echo -e "      ${BOLD}token_grant:${NC}"
+echo -e "        grant_type: ${CYAN}token_exchange${NC}"
+echo -e "        token_endpoint: http://token-exchange-issuer.bank-demo.svc.cluster.local/token"
+echo -e "        ${GREEN}scopes: [accounts.read, transfers.read]${NC}    ${DIM}← ONLY read scopes${NC}"
+echo -e "        ${RED}# accounts.write, transfers.write are NOT listed${NC}"
+echo -e "        ${RED}# → the agent can NEVER request write access${NC}"
+echo -e "        subject_token:"
+echo -e "          source: ${CYAN}sandbox_delegated_identity${NC}       ${DIM}← uses CEO's OIDC identity${NC}"
+echo ""
+echo -e "  ${BOLD}endpoints:${NC}"
+echo -e "    - host: bank-api.bank-demo.svc.cluster.local"
+echo ""
+echo -e "  ${DIM}The scopes field controls the blast radius. The platform admin decides${NC}"
+echo -e "  ${DIM}what the agent can do — not the CEO, and not the agent itself.${NC}"
+echo ""
+pause 4
+
+step "Applying the profile and creating the provider"
+echo ""
+echo -e "  ${DIM}# Platform admin imports the profile (once)${NC}"
+echo -e "${BOLD}\$ openshell provider profile import -f provider-profile-bank.yaml${NC}"
+echo -e "  Imported 1 provider profile."
+echo ""
+echo -e "  ${DIM}# Platform admin creates a provider instance (once)${NC}"
+echo -e "${BOLD}\$ openshell provider create --name bank-access --type bank-services --runtime-credentials${NC}"
+echo -e "  Created provider bank-access"
+echo ""
+echo -e "  ${DIM}# CEO creates a sandbox with the provider + identity delegation${NC}"
+echo -e "${BOLD}\$ openshell sandbox create --name ceo-agent \\${NC}"
+echo -e "${BOLD}    --provider bank-access \\${NC}"
+echo -e "${BOLD}    --delegate-identity-for 1h${NC}"
+echo ""
+echo -e "  The ${CYAN}provider profile${NC} controls ${RED}what scopes${NC} to request."
+echo -e "  The ${CYAN}--delegate-identity-for${NC} controls ${GREEN}whose identity${NC} to use."
+echo -e "  The ${CYAN}token-exchange-issuer${NC} enforces both at exchange time."
+echo ""
+pause 4
+
 # ─── CEO Identity ───
 header "Step 1: CEO Identity — who am I?"
 step "CEO authenticated via Keycloak OIDC"
@@ -159,13 +210,48 @@ echo -e "  ${RED}BLOCKED — agent cannot initiate transfers${NC}"
 pause 3
 
 # ─── Token Exchange Logs ───
-header "Step 5: Token Exchange Audit Trail"
-step "Token exchange issuer logs"
+header "Step 5: Where Descoping Happens — Audit Trail"
+
+step "Gateway logs: the ExchangeProviderSubjectToken RPC"
+echo ""
+echo -e "  ${DIM}The gateway receives the sandbox's request, fetches its own SVID,${NC}"
+echo -e "  ${DIM}and forwards the CEO's OIDC token to the token-exchange-issuer.${NC}"
+echo -e "  ${DIM}The scopes requested come from the provider profile (accounts.read, transfers.read).${NC}"
+echo ""
+echo -e "${DIM}\$ oc logs openshell-0 -n openshell-system | grep ExchangeProviderSubjectToken${NC}"
+oc logs openshell-0 -n openshell-system 2>&1 | grep 'ExchangeProviderSubjectToken' | tail -2 | \
+  sed 's/^/  /' | sed 's/\x1b\[[0-9;]*m//g' | cut -c1-155
+echo ""
+pause 2
+
+step "Token exchange issuer logs: 2-step exchange with descoping"
 echo ""
 echo -e "${DIM}\$ oc logs -n bank-demo -l app=token-exchange-issuer -c token-issuer${NC}"
+echo ""
 oc logs -n bank-demo -l app=token-exchange-issuer -c token-issuer 2>&1 | grep -E 'INTERMEDIATE|FINAL' | tail -4 | sed 's/^/  /'
 echo ""
-echo -e "  ${BOLD}Each exchange is logged:${NC} user, email, scopes, SPIFFE client ID"
+echo -e "  ${BOLD}Step 1 — INTERMEDIATE:${NC}"
+echo -e "    Gateway sends: CEO OIDC token (sub=ceo) + gateway SVID"
+echo -e "    Issuer verifies gateway SVID, emits intermediate token scoped to sandbox SVID"
+echo ""
+echo -e "  ${BOLD}Step 2 — FINAL:${NC}"
+echo -e "    Supervisor sends: intermediate token + sandbox SVID"
+echo -e "    Issuer verifies sandbox SVID, checks requested scopes against profile"
+echo -e "    ${RED}Strips write scopes → emits descoped token with read-only access${NC}"
+echo ""
+echo -e "  ${BOLD}The descoping chain:${NC}"
+echo -e "    Provider profile says: ${GREEN}scopes: [accounts.read, transfers.read]${NC}"
+echo -e "    → Supervisor requests only these scopes"
+echo -e "    → Issuer validates and emits token with only these scopes"
+echo -e "    → bank-api sees: scope=${GREEN}accounts.read transfers.read${NC} (no write)"
+echo ""
+pause 4
+
+step "bank-api logs: who accessed what"
+echo ""
+echo -e "${DIM}\$ oc logs -n bank-demo -l app=bank-api --tail=5${NC}"
+oc logs -n bank-demo -l app=bank-api --tail=5 2>&1 | grep -E 'ALLOWED|DENIED|request:' | tail -4 | sed 's/^/  /'
+echo ""
 pause 3
 
 # ─── Summary ───
