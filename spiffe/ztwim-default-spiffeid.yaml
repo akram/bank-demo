@@ -1,0 +1,24 @@
+# This ClusterSPIFFEID is created and managed automatically by the ZTWIM operator.
+# It matches ALL pods except those in the ZTWIM namespace.
+# It assigns generic ns/<namespace>/sa/<sa> identities.
+#
+# Problem: this also matches sandbox pods, giving them a generic identity
+# in addition to the sandbox-specific one from openshell-sandboxes-bankdemo.
+# The supervisor picks the first SVID returned (this one), not the sandbox-specific one.
+#
+# This file is for reference only — do NOT apply it, the operator manages it.
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: zero-trust-workload-identity-manager-spire-default
+spec:
+  className: zero-trust-workload-identity-manager-spire
+  fallback: true
+  hint: default
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: NotIn
+      values:
+      - zero-trust-workload-identity-manager
+  spiffeIDTemplate: "spiffe://{{ .TrustDomain }}/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}"
